@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import artifact, {UploadArtifactOptions} from '@actions/artifact'
+import {UploadArtifactOptions} from '../internal/shared/interfaces'
+import artifact from '../artifact'
 
 export async function uploadArtifact(
   artifactName: string,

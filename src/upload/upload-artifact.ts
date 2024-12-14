@@ -1,8 +1,7 @@
 import * as core from '@actions/core'
-import artifact, {
-  UploadArtifactOptions,
-  ArtifactNotFoundError
-} from '@actions/artifact'
+import artifact from '../artifact'
+import { UploadArtifactOptions } from '../internal/shared/interfaces'
+import { ArtifactNotFoundError } from '../internal/shared/errors'
 import {findFilesToUpload} from '../shared/search'
 import {getInputs} from './input-helper'
 import {NoFileOptions} from './constants'
