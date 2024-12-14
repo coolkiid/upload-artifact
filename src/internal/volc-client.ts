@@ -73,9 +73,9 @@ async function uploadArtifact(
   }
 
   const client = await createObjectStorageClient();
-  const objectName = `artifacts/${REPO}/${name}`;
+  const objectName = `artifacts/${REPO}/${name}.zip`;
   const archivePath = `${name}.zip`
-  await exec(`zip ${archivePath} ${files}`, undefined, {
+  await exec(`zip ${archivePath} ${files.join(' ')}`, undefined, {
     cwd: rootDirectory
   });
 

@@ -36,7 +36,10 @@
     "@actions/io": "^1.1.2",
     "@actions/exec": "^1.1.1",
     "minimatch": "^9.0.3",
-    "@volcengine/tos-sdk": "^2.7.3"
+    "@volcengine/tos-sdk": "^2.7.3",
+    "@octokit/plugin-request-log": "^1.0.4",
+    "@octokit/plugin-retry": "^6.1.0",
+    "@octokit/request-error": "^5.0.0"
   },
   "devDependencies": {
     "@types/jest": "^29.2.5",

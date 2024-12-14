@@ -28,7 +28,7 @@ async function exists(path: string): Promise<boolean> {
   try {
     await fs.access(path)
     return true
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'ENOENT') {
       return false
     } else {
@@ -43,7 +43,7 @@ async function streamExtract(url: string, directory: string): Promise<void> {
     try {
       await streamExtractExternal(url, directory)
       return
-    } catch (error) {
+    } catch (error: any) {
       retryCount++
       core.debug(
         `Failed to download artifact after ${retryCount} retries due to ${error.message}. Retrying in 5 seconds...`
@@ -142,7 +142,7 @@ export async function downloadArtifactPublic(
     core.info(`Starting download of artifact to: ${downloadPath}`)
     await streamExtract(location, downloadPath)
     core.info(`Artifact download completed successfully.`)
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(`Unable to download and extract artifact: ${error.message}`)
   }
 
@@ -194,7 +194,7 @@ export async function downloadArtifactInternal(
     core.info(`Starting download of artifact to: ${downloadPath}`)
     await streamExtract(signedUrl, downloadPath)
     core.info(`Artifact download completed successfully.`)
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(`Unable to download and extract artifact: ${error.message}`)
   }
 

@@ -85,7 +85,7 @@ export async function uploadZipToBlobStorage(
       ),
       chunkTimer(getUploadChunkTimeout())
     ])
-  } catch (error) {
+  } catch (error: any) {
     if (NetworkError.isNetworkErrorCode(error?.code)) {
       throw new NetworkError(error?.code)
     }

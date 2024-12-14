@@ -65,7 +65,7 @@ class ArtifactHttpClient implements Rpc {
       )
 
       return body
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Failed to ${method}: ${error.message}`)
     }
   }
@@ -99,7 +99,7 @@ class ArtifactHttpClient implements Rpc {
 
           errorMessage = `${errorMessage}: ${body.msg}`
         }
-      } catch (error) {
+      } catch (error: any) {
         if (error instanceof SyntaxError) {
           debug(`Raw Body: ${rawBody}`)
         }
