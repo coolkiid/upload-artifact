@@ -22,12 +22,13 @@ export async function uploadArtifact(
   core.setOutput('artifact-id', uploadResponse.id)
 
   const repository = github.context.repo
-  const artifactURL = `${github.context.serverUrl}/${repository.owner}/${repository.repo}/actions/runs/${github.context.runId}/artifacts/${uploadResponse.id}`
+  // const artifactURL = `${github.context.serverUrl}/${repository.owner}/${repository.repo}/actions/runs/${github.context.runId}/artifacts/${uploadResponse.id}`
+  const artifactURL = uploadResponse.url;
 
   core.info(`Artifact download URL: ${artifactURL}`)
   core.setOutput('artifact-url', artifactURL)
 
   await core.summary
-    .addRaw('<h2>Artifacts</h2> <a href="https://actions.tos-ap-southeast-1.bytepluses.com/artifacts/lynx-infra/test-self-hosted-runners/test-artifact.zip">test-artifact.zip</a>')
+    .addRaw(`<h2>Artifacts</h2> <a href="${artifactURL}">${artifactName}</a>`)
     .write()
 }

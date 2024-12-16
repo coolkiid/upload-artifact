@@ -34,11 +34,16 @@ import {
 } from './upload/upload-zip-specification'
 
 import {FilesNotFoundError, InvalidResponseError} from './shared/errors'
-import {exec} from '@actions/exec'
 import * as core from '@actions/core'
+import * as fs from 'fs'
+import {realpath} from 'fs/promises'
+import * as archiver from 'archiver'
+import {getBackendIdsFromToken} from './shared/util'
+import { start } from 'repl'
 
 const BUCKET = process.env["BUCKET_NAME"];
 const REPO = process.env["GITHUB_REPOSITORY"];
+const ENDPOINT = process.env["PUBLIC_ENDPOINT"];
 
 async function createObjectStorageClient(): Promise<TosClient> {
   const endpoint = process.env["ENDPOINT"];
@@ -54,6 +59,83 @@ async function createObjectStorageClient(): Promise<TosClient> {
   });
 }
 
+export const DEFAULT_COMPRESSION_LEVEL = 6
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const zipErrorCallback = (error: any): void => {
+  core.error('An error has occurred while creating the zip file for upload')
+  core.info(error)
+
+  throw new Error('An error has occurred during zip creation for the artifact')
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const zipWarningCallback = (error: any): void => {
+  if (error.code === 'ENOENT') {
+    core.warning(
+      'ENOENT warning during artifact zip creation. No such file or directory'
+    )
+    core.info(error)
+  } else {
+    core.warning(
+      `A non-blocking warning has occurred during artifact zip creation: ${error.code}`
+    )
+    core.info(error)
+  }
+}
+
+const zipFinishCallback = (): void => {
+  core.debug('Zip stream for upload has finished.')
+}
+
+const zipEndCallback = (): void => {
+  core.debug('Zip stream for upload has ended.')
+}
+
+async function archive(
+  name: string,
+  uploadSpecification: UploadZipSpecification[],
+  compressionLevel: number = DEFAULT_COMPRESSION_LEVEL
+): Promise<number> {
+  core.debug(
+    `Creating Artifact archive with compressionLevel: ${compressionLevel}`
+  )
+
+  const zip = archiver.create('zip', {
+    zlib: {level: compressionLevel}
+  });
+
+  // register callbacks for various events during the zip lifecycle
+  zip.on('error', zipErrorCallback)
+  zip.on('warning', zipWarningCallback)
+  zip.on('finish', zipFinishCallback)
+  zip.on('end', zipEndCallback)
+
+  for (const file of uploadSpecification) {
+    if (file.sourcePath !== null) {
+      // Check if symlink and resolve the source path
+      let sourcePath = file.sourcePath
+      if (file.stats.isSymbolicLink()) {
+        sourcePath = await realpath(file.sourcePath)
+      }
+
+      // Add the file to the zip
+      zip.file(sourcePath, {
+        name: file.destinationPath
+      })
+    } else {
+      // Add a directory to the zip
+      zip.append('', {name: file.destinationPath})
+    }
+  }
+
+  const stream = fs.createWriteStream(name);
+  zip.pipe(stream)
+  await zip.finalize()
+  stream.end();
+
+  return zip.pointer();
+}
+
 async function uploadArtifact(
   name: string,
   files: string[],
@@ -67,29 +149,33 @@ async function uploadArtifact(
     files,
     rootDirectory
   )
+
   if (zipSpecification.length === 0) {
     throw new FilesNotFoundError(
       zipSpecification.flatMap(s => (s.sourcePath ? [s.sourcePath] : []))
     )
   }
 
-  const client = await createObjectStorageClient();
-  const objectName = `artifacts/${REPO}/${name}.zip`;
-  const archivePath = `${name}.zip`
+  const backendIds = getBackendIdsFromToken();
 
-  await exec(`zip ${archivePath} ${files.join(' ')}`, undefined, {
-    cwd: rootDirectory
-  });
+  const client = await createObjectStorageClient();
+  const fileName = `${name}-${backendIds.workflowRunBackendId}-${backendIds.workflowJobRunBackendId}.zip`;
+  const objectName = `artifacts/${REPO}/${fileName}`;
+  
+  const size = await archive(`${rootDirectory}/${fileName}`, zipSpecification);
 
   await client.putObjectFromFile({
     bucket: BUCKET,
     key: objectName,
-    filePath: archivePath
+    filePath: fileName,
+    headers: {
+      'content-length': size.toString()
+    }
   });
 
   return {
-    size: 0,
-    id: 0
+    size: size,
+    url: `https://${BUCKET}.${ENDPOINT}/artifacts/${REPO}/${fileName}`
   }
 }
 
