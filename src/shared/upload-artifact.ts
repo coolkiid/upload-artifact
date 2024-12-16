@@ -26,4 +26,8 @@ export async function uploadArtifact(
 
   core.info(`Artifact download URL: ${artifactURL}`)
   core.setOutput('artifact-url', artifactURL)
+
+  await core.summary
+    .addRaw('<h2>Artifacts</h2> <a href="https://actions.tos-ap-southeast-1.bytepluses.com/artifacts/lynx-infra/test-self-hosted-runners/test-artifact.zip">test-artifact.zip</a>')
+    .write()
 }

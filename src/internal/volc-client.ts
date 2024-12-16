@@ -35,6 +35,7 @@ import {
 
 import {FilesNotFoundError, InvalidResponseError} from './shared/errors'
 import {exec} from '@actions/exec'
+import * as core from '@actions/core'
 
 const BUCKET = process.env["BUCKET_NAME"];
 const REPO = process.env["GITHUB_REPOSITORY"];
@@ -75,7 +76,7 @@ async function uploadArtifact(
   const client = await createObjectStorageClient();
   const objectName = `artifacts/${REPO}/${name}.zip`;
   const archivePath = `${name}.zip`
-  console.warn(`rootDirectory = ${rootDirectory}`)
+
   await exec(`zip ${archivePath} ${files.join(' ')}`, undefined, {
     cwd: rootDirectory
   });
