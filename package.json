@@ -5,6 +5,7 @@
   "main": "dist/upload/index.js",
   "scripts": {
     "build": "tsc",
+    "bootstrap": "pushd toolkit && npm install && npm run build && popd",
     "release": "ncc build src/upload/index.ts -o dist/upload && ncc build src/merge/index.ts -o dist/merge",
     "check-all": "concurrently \"npm:format-check\" \"npm:lint\" \"npm:test\" \"npm:build\"",
     "format": "prettier --write **/*.ts",
@@ -29,7 +30,7 @@
   },
   "homepage": "https://github.com/actions/upload-artifact#readme",
   "dependencies": {
-    "@actions/artifact": "^2.2.1",
+    "@actions/artifact": "workspace:*",
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.0",
     "@actions/glob": "^0.5.0",
